@@ -6,25 +6,25 @@ void setup() {
   servoLeft.attach(2);
   servoRight.attach(4);
   
-  servoLeft.write(750);
-  servoRight.write(750);
+  servoLeft.write(90);
+  servoRight.write(90);
 }
 
 void loop() {
-  // Both servos spin forward at full speed for 1 second.
-  servoLeft.write(1300);
-  servoLeft.write(1700);
+  // Left wheel servo spin forward while right wheel servo spins backward at full speed for 1 second
+  servoLeft.write(1500);
+  servoLeft.write(0);
   delay(1000);
   // Both servos are stationary for 1 second.
-  servoLeft.write(750);
-  servoRight.write(750);
+  servoLeft.write(90);
+  servoRight.write(90);
   delay(1000);
-  // Both servos spin in reverse at full speed for 1 second.
-  servoLeft.write(1700);
-  servoRight.write(1300);
+  // Right wheel servo spin forward while left wheel servo spins backward at full speed for 1 second
+  servoLeft.write(0);
+  servoRight.write(1500);
   delay(1000);
   // Both servos are stationary for 1 second.
-  servoLeft.write(750);
-  servoRight.write(750);
+  servoLeft.write(90);
+  servoRight.write(90);
   delay(1000);
 }
