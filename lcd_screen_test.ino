@@ -3,8 +3,8 @@ const int TxPin = 12; // Can use any pin from 2 to 12
 #include <SoftwareSerial.h>
 SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
 void setup() {
-pinMode(TxPin, OUTPUT);
-digitalWrite(TxPin, HIGH);
+//pinMode(TxPin, OUTPUT);
+//digitalWrite(TxPin, HIGH);
 mySerial.begin(9600);
 delay(100);
 mySerial.write(12); // Clear
