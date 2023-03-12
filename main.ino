@@ -14,7 +14,7 @@ class Robot {
   Robot();
   //Declaring all the required functions
   void getDistance();
-  void driveRobot();
+  float driveRobot();
   void displayData();
 };
 
@@ -25,8 +25,20 @@ Robot::Robot(){
 }
 
 //Defining getDistance function
-void Robot::getDistance() {
+float Robot::getDistance() {
+  digitalWrite(pin, LOW); // set the pin to low
+  delayMicroseconds(2); // wait for 2 microseconds
+  digitalWrite(pin, HIGH); // set the pin to high to trigger the sensor
+  delayMicroseconds(10); // wait for 10 microseconds
+  digitalWrite(pin, LOW); // set the pin to low again to switch to echo mode
+
+  duration = pulseIn(pin, HIGH); // measure the duration of the sound wave travel
+  distance = duration * 0.034 / 2; // calculate the distance in cm
   
+  Serial.print("Obstacles in ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  return distance;
 }
 
 //Defining driveRobot function
