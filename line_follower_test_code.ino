@@ -1,68 +1,45 @@
-#include <QTRSensors.h>
+// Line follower test code
+
 #include <Servo.h>
 
-QTRSensorsRC qtrrc((unsigned char[]) {2, 3, 4, 5, 6, 7, 8, 9}, 8);
-unsigned int sensorValues[8];
+// Defining values for black and white
+#define black 1
+#define white 0
 
-#define MOTOR_LEFT_PIN 10
-#define MOTOR_RIGHT_PIN 11
+// IR sensor pins
+const int IR_M1 = 4;   //D4
+const int IR_M2 = 8;   //D8
 
-#define MAX_SPEED 150
-#define MIN_SPEED 50
-#define THRESHOLD 500
+Servo servoLeft, servoRight;
 
 void setup() {
-  qtrrc.calibrate();
-  pinMode(MOTOR_LEFT_PIN, OUTPUT);
-  pinMode(MOTOR_RIGHT_PIN, OUTPUT);
+  servoLeft.attach(2);
+  servoRight.attach(3);
 }
-
 void loop() {
-  qtrrc.read(sensorValues);
-  int error = qtrrc.readLine(sensorValues);
 
-  int leftSpeed = MAX_SPEED;
-  int rightSpeed = MAX_SPEED;
-  
-  if (error < 0) {
-    leftSpeed = MIN_SPEED;
-  } else if (error > 0) {
-    rightSpeed = MIN_SPEED;
+  // Read the sensor values
+  int S1 = digitalRead(IR_M1);
+  int S2 = digitalRead(IR_M2);
+  int S3 = digitalRead(IR_EL);
+  int S4 = digitalRead(IR_ER);
+
+  //Conditions to drive line folower appropriately
+  if (S1 == white && S2 == white) {
+    //forward
+    servoLeft.write(1550);
+    servoRight.write(1450);
   }
-
-  int diff = abs(error);
-  if (diff > THRESHOLD) {
-    leftSpeed = 0;
-    rightSpeed = 0;
-  } else {
-    int speedDelta = map(diff, 0, THRESHOLD, 0, MAX_SPEED - MIN_SPEED);
-    if (error < 0) {
-      leftSpeed -= speedDelta;
-    } else {
-      rightSpeed -= speedDelta;
-    }
+  else if (S1 == black &&  S2 == black) {
+    // Turn right
+    servoLeft.write(1550);
+    servoRight.write(1520);
+    delay(1000);
   }
-
-  // set motor speed and direction
-  if (leftSpeed == 0 && rightSpeed == 0) {
-    // stop the robot
-    analogWrite(MOTOR_LEFT_PIN, 0);
-    analogWrite(MOTOR_RIGHT_PIN, 0);
-  } else {
-    // drive the motors
-    if (error < 0) {
-      // turn left
-      analogWrite(MOTOR_LEFT_PIN, leftSpeed);
-      analogWrite(MOTOR_RIGHT_PIN, rightSpeed);
-    } else if (error > 0) {
-      // turn right
-      analogWrite(MOTOR_LEFT_PIN, leftSpeed);
-      analogWrite(MOTOR_RIGHT_PIN, rightSpeed);
-    } else {
-      // go straight
-      analogWrite(MOTOR_LEFT_PIN, leftSpeed);
-      analogWrite(MOTOR_RIGHT_PIN, rightSpeed);
-    }
+  else {
+    // Stop
+    servoLeft.write(1500);
+    servoRight.write(1500);
   }
 }
 
