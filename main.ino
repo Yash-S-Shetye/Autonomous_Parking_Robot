@@ -1,13 +1,17 @@
 //Defining all the pins for sensors and wheels
+#define black 1
+#define white 0
 //Creating a main class
 class Robot {
   private:
   //Defining required variables
   long duration;
   int distance;
-  const int leftwheelpin=5;
-  const rightwheelpin=6
-  int ultrasonic=9;
+  const int leftwheel=2
+  const int rightwheel=3;
+  const int ultrasonic=9;
+  const int IR_ML=4;
+  const int IR_MR=8;
   Servo servoLeft, servoRight;
   
   public:
@@ -16,12 +20,13 @@ class Robot {
   void getDistance();
   float driveRobot();
   void displayData();
+  void linefollowing();
 };
 
 //Initialization
 Robot::Robot(){
-  servoLeft.attach(leftwheelpin);
-  servoRight.attach(rightwheelpin);  
+  servoLeft.attach(leftwheel);
+  servoRight.attach(rightwheel);  
 }
 
 //Defining getDistance function
@@ -47,10 +52,31 @@ void Robot::driveRobot(char i) {
   // f, b, l, r, s means forward, backward, left, right, and stop
     case 'f':servoLeft.write(1550);servoRight.write(1450);break;
     case 'b':servoLeft.write(1450);servoRight.write(1550);break;
-    case 'l':servoLeft.write(1550);servoRight.write(1500);break;
-    case 'r':servoLeft.write(1500);servoRight.write(1550);break;
+    case 'l':servoLeft.write(1550);servoRight.write(1550);break;
+    case 'r':servoLeft.write(1450);servoRight.write(1450);break;
     case 's':servoLeft.write(1500);servoRight.write(1500);break;
     default:Serial.println("Unclear command for motors");break;
+  }
+}
+
+void linefollowing(){
+  SL = digitalRead(IR_ML);
+  SR = digitalRead(IR_MR);
+  if (SL == white && SR == white) {
+    //forward
+    dirveRobot('f');
+  }
+  else if (SL == black && SR== white) {
+    driveRobot('l');
+  }
+  else if (SL == white &&  SR == black) {
+    // Turn right
+    driveRobot('r');
+  }
+  else {
+    // Stop
+    servoLeft.write(1500);
+    servoRight.write(1500);
   }
 }
 
@@ -67,5 +93,5 @@ void setup() {
 }
 
 void loop() {
- 
+ rob.linefollowing();
 }
