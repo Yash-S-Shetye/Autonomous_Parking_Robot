@@ -33,7 +33,10 @@ void loop() {
   else if (S1 == black &&  S2 == black) {
     // Turn right
     servoLeft.write(1550);
-    servoRight.write(1520);
+    servoRight.write(1450);
+    delay(500);
+    servoLeft.write(1550);
+    servoRight.write(1550);
     delay(1000);
   }
   else {
