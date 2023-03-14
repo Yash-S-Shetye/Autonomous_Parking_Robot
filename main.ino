@@ -25,8 +25,10 @@ class Robot {
   void drive(char i);
   void displayData();
   bool linefollowing();
-  void obstacledetection();
+  bool obstacledetection();
   void test();
+  void laneMotion();
+  void park();
 };
 
 //Initialization
@@ -62,8 +64,8 @@ void Robot::drive(char i) {
   // f, b, l, r, s means forward, backward, left, right, and stop
     case 'f':servoLeft.write(1550);servoRight.write(1450);Serial.println("f");break;
     case 'b':servoLeft.write(1450);servoRight.write(1550);break;
-    case 'l':servoLeft.write(1550);servoRight.write(1550);break;
-    case 'r':servoLeft.write(1450);servoRight.write(1450);break;
+    case 'l':servoLeft.write(1450);servoRight.write(1450);break;
+    case 'r':servoLeft.write(1550);servoRight.write(1550);break;
     case 's':servoLeft.write(1500);servoRight.write(1500);break;
     default:Serial.println("Unclear command for motors");break;
   }
@@ -94,13 +96,50 @@ void Robot::displayData() {
   
 }
 
-void Robot::obstacledetection(){
-  
+// Detect obstacle and measure its size
+bool Robot::obstacledetection(){
+  unsigned long startTime;
+  unsigned long endTime;
+  long object_length;
+  while(!linefollowing()) {
+    if(getDistance() < 300) {
+        startTime = millis(); // Start timer after obstacle detected
+        while(getDistance() < 300) {
+        };
+        endTime = millis(); // Stop timer after obstacle disappers
+        object_length = endTime - startTime; // Calculate size of object
+        Serial.println(object_length); // Print size of object
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void Robot::test(){
   servoLeft.write(1500);servoRight.write(1500);
+}
 
+// Move robot in lane
+void Robot::laneMotion() {
+  while(!localfinish) {     
+    if(!linefollowing()) { //if meet intersection
+      drive('f');delay(500); 
+      drive('r');delay(2000); //turn 180
+      localfinish=true;
+    }
+  }
+}
+
+// Park robot
+void Robot::park() { 
+  if(!linefollowing()) { //if meet intersection
+    drive('f');delay(500); 
+    drive('r');delay(1000); //turn right
+    if(!linefollowing()) {
+      drive('s');delay(5000); // final stop
+    }
+  }
 }
 
 //create robot object
@@ -112,33 +151,37 @@ void setup() {
   rob.INIT();
 }
 
-
-
 void loop() {
-  if(!finish){  //gloabal check flag, will set to be true when finish parking
+  //if(!finish){  //gloabal check flag, will set to be true when finish parking
 
     //follow the line and enter the intersection
-    while(!localfinish){
       if(!rob.linefollowing()){     //if meet intersection
-        rob.drive('s');delay(500);  //turn right
-        rob.drive('r');delay(1000);
-        localfinish=true;
-        c_intersection++;  //record  the intersections have been passed
+        rob.drive('f');delay(500); 
+        rob.drive('r');delay(1000); //turn right
+        c_intersection++; //record  the intersections have been passed
+        //localfinish=true;
+        rob.laneMotion();
+        if(rob.obstacledetection()==false) {
+          rob.park();
+        }
       }
-    }
+    //}
+
 
     //obstacle detection
-    localfinish=false;
+    /*localfinish=false;
     while(!localfinish){
+      if(getReadings() < 300) {
+      startTime = millis();
+      while(getReadings() < 300) {
+      };
+      endTime = millis();
+      object_length = endTime - startTime;
+      Serial.println(object_length);
+    }
       
     }
+    }*/
 
-    //parking section
-    localfinish=false;
-    while(localfinish){
-
-    }
-
-  }
-  
+  //}
 }
