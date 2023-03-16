@@ -4,13 +4,15 @@
 #define white 0
 #define obsdistance 
 
-SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
-
 bool finish=false;
 bool localfinish=false;
 int c_intersection=0;
 int parkinglot[8]={0,0,0,0,0,0,0,0};
 int parkidx=0;
+const int TxPin = 11;
+
+Servo servoLeft, servoRight;
+SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
 
 //Creating a robot class containing all the functions will be used
 class Robot {
@@ -21,8 +23,6 @@ class Robot {
   const int ultrasonic=9;
   const int IR_ML=4;
   const int IR_MR=8;
-  const int TxPin = 12;
-  Servo servoLeft, servoRight;
   
   public:
   void INIT();
@@ -39,6 +39,10 @@ void Robot::INIT(){
   servoLeft.attach(leftwheel);
   servoRight.attach(rightwheel);
   mySerial.begin(9600);
+  delay(100);
+  mySerial.write(12); // Clear
+  mySerial.write(17); // Turn backlight on
+  delay(5); // Required delay
 }
 
 //Defining getDistance function
@@ -109,6 +113,7 @@ void Robot::lcd_display(char disp) {
     case 'o': mySerial.print("Object Detected");delay(500);mySerial.write(12);break; // o - object detected
     case 'p': mySerial.print("Parked");mySerial.write(13);mySerial.print("Successfully !!");delay(500);mySerial.write(12);break; // p - parked successfully
     case 's': mySerial.print("Occupied Spaces");mySerial.write(13);mySerial.print(parkidx);delay(500);mySerial.write(12);break; // s - Number of occupied spaces
+    default:Serial.println("Unclear command for display");break;
   }
 }
 
@@ -122,9 +127,7 @@ Robot rob;
 
 void setup() {
   //initialize objects of Robot class and calling all the functions using the created object
-  Serial.begin(9600);
-  mySerial.write(17); // Turn backlight on
-  delay(100);
+  //Serial.begin(9600);
   rob.INIT();
 }
 
@@ -157,9 +160,10 @@ void loop() {
       if(isintersection && c_itsc==0) { //if meet intersection
         rob.drive('f');delay(500); 
         rob.drive('r');delay(2300); //turn 180
-        c_itsc+=1;pre=false;
+        c_itsc+=1;pre=false;startTime=millis();
       }
       else if(isintersection && c_itsc==2){
+        endTime=millis();
         rob.drive('f');delay(500);
         rob.drive('l');delay(2300);//turn 180
         c_itsc+=1;parkidx+=1;
@@ -178,22 +182,20 @@ void loop() {
       if(!isintersection && c_itsc==1){
         if(pre==false && rob.isobstacle()==true){
           rob.lcd_display('o');
-          //startTime=millis();
           parkinglot[parkidx]=1;pre=true;
         }
         if(pre==true && rob.isobstacle()==false){
-          //endTime=millis();
+          endTime=millis();
           pre=false;
         }
       }
       if(!isintersection && c_itsc==2){
         if(pre==false && rob.isobstacle()==true){
           rob.lcd_display('o');
-          //startTime=millis();
+          startTime=millis();
           parkinglot[parkidx]=1;pre=true;
         }
         if(pre==true && rob.isobstacle()==false){
-          //endTime=millis();
           pre=false;
         }
       }
