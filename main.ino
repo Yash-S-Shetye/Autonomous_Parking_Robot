@@ -66,7 +66,7 @@ void Robot::drive(char i) {
     case 'b':servoLeft.write(1450);servoRight.write(1550);break;
     case 'l':servoLeft.write(1450);servoRight.write(1450);break;
     case 'r':servoLeft.write(1550);servoRight.write(1550);break;
-    case 's':servoLeft.write(1500);servoRight.write(1500);delay(20);break;
+    case 's':servoLeft.write(1500);servoRight.write(1500);break;
     default:Serial.println("Unclear command for motors");break;
   }
 }
@@ -179,22 +179,26 @@ void loop() {
     //3rd step: park
     localfinish=false;
     while(!localfinish){
-      //check if it's the last two praking spots
-      if(parkidx==8 && parkinglot[6]==1 && parkinglot[7]==0){
+      //check if it's the last two parking spots
+      /*if(parkidx==8 && parkinglot[6]==1 && parkinglot[7]==0){
         //display no parking spot is found and stop
         rob.drive('s');
-      }
-      if(!rob.linefollowing()==0){
+      }*/
+      if(!rob.linefollowing()){
         if(parkinglot[parkidx-2]==0){
           rob.drive('f');delay(500);
           rob.drive('r');delay(1000);//turn right
-          while(rob.linefollowing()){}
+          while(rob.linefollowing()){};
+          rob.drive('f');delay(500);
+          rob.drive('s');delay(1000);
           finish=true;localfinish=true;
         }
         else if(parkinglot[parkidx-1]==0){
           rob.drive('f');delay(500);
           rob.drive('l');delay(1000);//turn left
-          while(rob.linefollowing()){}
+          while(rob.linefollowing()){};
+          rob.drive('f');delay(500);
+          rob.drive('s');delay(1000);
           finish=true;localfinish=true;
         }
         else{
