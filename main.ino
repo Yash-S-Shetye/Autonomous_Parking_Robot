@@ -9,10 +9,9 @@ bool localfinish=false;
 int c_intersection=0;
 int parkinglot[8]={0,0,0,0,0,0,0,0};
 int parkidx=0;
-const int TxPin = 11;
 
-Servo servoLeft, servoRight;
-SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
+
+
 
 //Creating a robot class containing all the functions will be used
 class Robot {
@@ -21,8 +20,11 @@ class Robot {
   const int leftwheel=2;
   const int rightwheel=3;
   const int ultrasonic=9;
+  const int TxPin = 12;
   const int IR_ML=4;
   const int IR_MR=8;
+  Servo servoLeft, servoRight;
+  SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
   
   public:
   void INIT();
@@ -43,6 +45,7 @@ void Robot::INIT(){
   mySerial.write(12); // Clear
   mySerial.write(17); // Turn backlight on
   delay(5); // Required delay
+  mySerial.print("Initialized!!!");delay(2000);
 }
 
 //Defining getDistance function
@@ -237,6 +240,5 @@ void loop() {
         }
       }
     }
-      
   }
 }
