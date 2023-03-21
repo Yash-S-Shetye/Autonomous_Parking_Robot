@@ -4,7 +4,7 @@
 #define white 0
 #define obsdistance 15
 #define nighty 800
-#define oneeighty 1700
+#define oneeighty 1800
 
 bool finish=false;
 bool localfinish=false;
@@ -24,10 +24,11 @@ class Robot {
   const int IR_MR=8;
   const int led=13;
   Servo servoLeft, servoRight;
-  SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
+  
   
   public:
   void INIT();
+  SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
   //Declaring all the required functions
   bool isobstacle();
   void drive(char i);
@@ -66,10 +67,10 @@ bool Robot::isobstacle() {
   
   
   if (distance<obsdistance){
-    digitalWrite(led,HIGH);
+    digitalWrite(led,HIGH);delay(10);
     return true;}
   else{
-    digitalWrite(led,LOW);
+    digitalWrite(led,LOW);delay(10);
     return false;}
 }
 
@@ -164,12 +165,11 @@ void loop() {
         rob.drive('f');delay(500); 
         rob.drive('r');delay(oneeighty); //turn 180
         tic=millis();
-        while((toc-tic)<500){rob.linefollowing();toc=millis();}
         c_itsc++;
       }
       else if(isintersection && c_itsc==2){
         rob.drive('f');delay(500);
-        rob.drive('r');delay(oneeighty);//turn 180
+        rob.drive('r');delay(oneeighty+100);//turn 180
         c_itsc++;parkidx++;
       }
       else if(isintersection && c_itsc==1){
@@ -186,13 +186,19 @@ void loop() {
       if(!isintersection && c_itsc==1 && parkinglot[parkidx]==0){
         bool isobj=rob.isobstacle();
         if(isobj==true){
-          tic=millis();
-          while(rob.isobstacle()){}
           toc=millis();
-          if(toc-tic>200)
-          parkinglot[parkidx]=1;
-          // rob.lcd_display('o');
-          
+          rob.mySerial.write(12); // Clear
+          rob.mySerial.write(17);
+          delay(5); // Required delay
+          rob.mySerial.print(toc-tic);
+          if(toc-tic<200){parkinglot[parkidx]=2;}
+          else{
+            tic=millis();
+            while(rob.isobstacle()){rob.linefollowing();}
+            toc=millis();
+            if(toc-tic>200)
+              parkinglot[parkidx]=1;
+          }
         }
       }
       if(!isintersection && c_itsc==2 && parkinglot[parkidx]==0){
@@ -200,16 +206,13 @@ void loop() {
         if(isobj==true){
           toc=millis();
           if(toc-tic>2500){parkinglot[parkidx]=2;}
-          // while(rob.isobstacle()){
-          //   if(!rob.linefollowing()){
-          //     parkinglot[parkidx]=2;
-          //     break;
-          //   }
-          // }
-          // toc=millis();
-          // rob.lcd_display('o');     toc-tic>200 &&
-          if( parkinglot[parkidx]==0)
-            parkinglot[parkidx]=1;
+          else{
+            tic=millis();
+            while(rob.isobstacle()){if(!rob.linefollowing()){break;}}
+            toc=millis(); 
+            if(toc-tic>200 && parkinglot[parkidx]==0)
+              parkinglot[parkidx]=1;
+        }
         }
       }
     }
