@@ -2,16 +2,15 @@
 #include <SoftwareSerial.h>
 #define black 1
 #define white 0
-#define obsdistance 
+#define obsdistance 15
+#define nighty 800
+#define oneeighty 1700
 
 bool finish=false;
 bool localfinish=false;
 int c_intersection=0;
 int parkinglot[8]={0,0,0,0,0,0,0,0};
 int parkidx=0;
-
-
-
 
 //Creating a robot class containing all the functions will be used
 class Robot {
@@ -23,6 +22,7 @@ class Robot {
   const int TxPin = 12;
   const int IR_ML=4;
   const int IR_MR=8;
+  const int led=13;
   Servo servoLeft, servoRight;
   SoftwareSerial mySerial = SoftwareSerial(255, TxPin);
   
@@ -46,6 +46,7 @@ void Robot::INIT(){
   mySerial.write(17); // Turn backlight on
   delay(5); // Required delay
   mySerial.print("Initialized!!!");delay(2000);
+  pinMode(led,OUTPUT);
 }
 
 //Defining getDistance function
@@ -56,31 +57,31 @@ bool Robot::isobstacle() {
   digitalWrite(ultrasonic, LOW); // set the pin to low
   delayMicroseconds(2); // wait for 2 microseconds
   digitalWrite(ultrasonic, HIGH); // set the pin to high to trigger the sensor
-  delayMicroseconds(5); // wait for 10 microseconds
+  delayMicroseconds(10); // wait for 10 microseconds
   digitalWrite(ultrasonic, LOW); // set the pin to low again to switch to echo mode
 
   pinMode(ultrasonic,INPUT);
   duration = pulseIn(ultrasonic, HIGH); // measure the duration of the sound wave travel
   distance = duration * 0.034 / 2; // calculate the distance in cm
   
-  Serial.print("Obstacles in ");
-  Serial.print(distance);
-  Serial.println(" cm");
-  if (distance<15)
-    return true;
-  else
-    return false;
+  
+  if (distance<obsdistance){
+    digitalWrite(led,HIGH);
+    return true;}
+  else{
+    digitalWrite(led,LOW);
+    return false;}
 }
 
 //Defining drive function
 void Robot::drive(char i) {
   switch(i){
   // f, b, l, r, s means forward, backward, left, right, and stop
-    case 'f':servoLeft.write(1550);servoRight.write(1450);Serial.println("f");break;
-    case 'b':servoLeft.write(1450);servoRight.write(1550);break;
-    case 'l':servoLeft.write(1450);servoRight.write(1450);break;
-    case 'r':servoLeft.write(1550);servoRight.write(1550);break;
-    case 's':servoLeft.write(1500);servoRight.write(1500);break;
+    case 'f':servoLeft.write(1550);servoRight.write(1440);delay(20);break;
+    case 'b':servoLeft.write(1450);servoRight.write(1550);delay(20);break;
+    case 'l':servoLeft.write(1450);servoRight.write(1450);delay(20);break;
+    case 'r':servoLeft.write(1550);servoRight.write(1550);delay(20);break;
+    case 's':servoLeft.write(1500);servoRight.write(1500);delay(20);break;
     default:Serial.println("Unclear command for motors");break;
   }
 }
@@ -91,26 +92,28 @@ bool Robot::linefollowing(){
   int SR = digitalRead(IR_MR);
   if (SL == white && SR == white) {
     //forward
-    drive('f');Serial.println("Line is Centered");return true;
+    drive('f');return true;
   }
   else if (SL == black && SR== white) {
     //turn left
-    drive('l');Serial.println("Line is on the Left");return true;
+    drive('l');return true;
   }
   else if (SL == white &&  SR == black) {
     // Turn right
-    drive('r');Serial.println("Line is on the Right");return true;
+    drive('r');return true;
   }
   else {
     // Stop
-    drive('s');Serial.println("Intersection ahead");return false;
+    drive('s');return false;
   }
 }
 
 //Defining lcd display function
 void Robot::lcd_display(char disp) {
   mySerial.write(12); // Clear
+  mySerial.write(17);
   delay(5); // Required delay
+  
   switch(disp) {
     case 'i': mySerial.print("Intersection");mySerial.write(13);mySerial.print("Detected");delay(500);mySerial.write(12);break; // i - Intersection detected
     case 'o': mySerial.print("Object Detected");delay(500);mySerial.write(12);break; // o - object detected
@@ -130,7 +133,7 @@ Robot rob;
 
 void setup() {
   //initialize objects of Robot class and calling all the functions using the created object
-  //Serial.begin(9600);
+  Serial.begin(9600);
   rob.INIT();
 }
 
@@ -143,7 +146,7 @@ void loop() {
       if(!rob.linefollowing()){     //if meet intersection
         rob.lcd_display('i');
         rob.drive('f');delay(500); 
-        rob.drive('r');delay(1000); //turn right
+        rob.drive('r');delay(nighty); //turn right
         c_intersection++; //record  the intersections have been passed
         localfinish=true;
       }
@@ -153,53 +156,60 @@ void loop() {
     localfinish=false;
     int c_itsc=0;
     bool isintersection=false;
-    bool pre=false;
-    unsigned long enteritsc=0;
-    unsigned long startTime=0;
-    unsigned long endTime=0;
+    unsigned long tic, toc;
     while(!localfinish){
       //move the robot
       isintersection=!rob.linefollowing();
       if(isintersection && c_itsc==0) { //if meet intersection
         rob.drive('f');delay(500); 
-        rob.drive('r');delay(2300); //turn 180
-        c_itsc+=1;pre=false;startTime=millis();
+        rob.drive('r');delay(oneeighty); //turn 180
+        tic=millis();
+        while((toc-tic)<500){rob.linefollowing();toc=millis();}
+        c_itsc++;
       }
       else if(isintersection && c_itsc==2){
-        endTime=millis();
         rob.drive('f');delay(500);
-        rob.drive('l');delay(2300);//turn 180
-        c_itsc+=1;parkidx+=1;
+        rob.drive('r');delay(oneeighty);//turn 180
+        c_itsc++;parkidx++;
       }
       else if(isintersection && c_itsc==1){
-        rob.drive('f');delay(1000);//pass the intersection
-        c_itsc+=1;pre=false;parkidx+=1;
+        rob.drive('f');delay(600);//pass the intersection
+        c_itsc++;parkidx++;tic=millis();
       }
       else if(isintersection && c_itsc==3){
         rob.drive('f');delay(500);
-        rob.drive('l');delay(1000);//turn left
+        rob.drive('l');delay(nighty);//turn left
         localfinish=true;
       }
 
       //call ultrasonic function to detect obstacles
-      if(!isintersection && c_itsc==1){
-        if(pre==false && rob.isobstacle()==true){
-          rob.lcd_display('o');
-          parkinglot[parkidx]=1;pre=true;
-        }
-        if(pre==true && rob.isobstacle()==false){
-          endTime=millis();
-          pre=false;
+      if(!isintersection && c_itsc==1 && parkinglot[parkidx]==0){
+        bool isobj=rob.isobstacle();
+        if(isobj==true){
+          tic=millis();
+          while(rob.isobstacle()){}
+          toc=millis();
+          if(toc-tic>200)
+          parkinglot[parkidx]=1;
+          // rob.lcd_display('o');
+          
         }
       }
-      if(!isintersection && c_itsc==2){
-        if(pre==false && rob.isobstacle()==true){
-          rob.lcd_display('o');
-          startTime=millis();
-          parkinglot[parkidx]=1;pre=true;
-        }
-        if(pre==true && rob.isobstacle()==false){
-          pre=false;
+      if(!isintersection && c_itsc==2 && parkinglot[parkidx]==0){
+        bool isobj=rob.isobstacle();
+        if(isobj==true){
+          toc=millis();
+          if(toc-tic>2500){parkinglot[parkidx]=2;}
+          // while(rob.isobstacle()){
+          //   if(!rob.linefollowing()){
+          //     parkinglot[parkidx]=2;
+          //     break;
+          //   }
+          // }
+          // toc=millis();
+          // rob.lcd_display('o');     toc-tic>200 &&
+          if( parkinglot[parkidx]==0)
+            parkinglot[parkidx]=1;
         }
       }
     }
@@ -208,28 +218,26 @@ void loop() {
     localfinish=false;
     while(!localfinish){
       //check if it's the last two parking spots
-      /*if(parkidx==8 && parkinglot[6]==1 && parkinglot[7]==0){
+      if(parkidx==8 && parkinglot[6]==1 && parkinglot[7]==0){
         //display no parking spot is found and stop
         rob.drive('s');
-      }*/
+      }
       if(!rob.linefollowing()){
         rob.lcd_display('i');
-        if(parkinglot[parkidx-2]==0){
+        if(parkinglot[parkidx-2]==0||parkinglot[parkidx-2]==2){
           rob.drive('f');delay(500);
-          rob.drive('r');delay(1000);//turn right
+          rob.drive('r');delay(nighty);//turn right
           while(rob.linefollowing()){};
-          rob.drive('f');delay(500);
-          rob.drive('s');delay(5000);
+          rob.drive('s');delay(500);
           rob.lcd_display('p');
           rob.lcd_display('s');
           finish=true;localfinish=true;
         }
-        else if(parkinglot[parkidx-1]==0){
+        else if(parkinglot[parkidx-1]==0||parkinglot[parkidx-1]==2){
           rob.drive('f');delay(500);
-          rob.drive('l');delay(1000);//turn left
+          rob.drive('l');delay(nighty);//turn left
           while(rob.linefollowing()){};
-          rob.drive('f');delay(500);
-          rob.drive('s');delay(5000);
+          rob.drive('s');delay(500);
           rob.lcd_display('p');
           rob.lcd_display('s');
           finish=true;localfinish=true;
