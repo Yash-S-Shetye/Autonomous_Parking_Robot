@@ -13,7 +13,6 @@ int parkinglot[8]={0,0,0,0,0,0,0,0};
 int parkidx=0;
 int obstacles_no=0;
 int c_tw=0;
-bool tw_btsc=false;
 
 //Creating a robot class containing all the functions will be used
 class Robot {
@@ -122,9 +121,7 @@ void Robot::lcd_display(char disp) {
   switch(disp) {
     case 'i': mySerial.print("Intersection");mySerial.write(13);mySerial.print("Detected");delay(500);mySerial.write(12);break; // i - Intersection detected
     case 'p': mySerial.print("Parked");mySerial.write(13);mySerial.print("Successfully !!");delay(3000);mySerial.write(12);break; // p - parked successfully
-    case 's': if(tw_btsc=true) {mySerial.print("Occupied Spaces");mySerial.write(13);mySerial.print(obstacles_no-1);delay(3000);mySerial.write(12)  ;}else{
-              mySerial.print("Occupied Spaces");mySerial.write(13);mySerial.print(obstacles_no);delay(3000);mySerial.write(12);}// s - Number of occupied spaces
-              break;
+    case 's': mySerial.print("Occupied Spaces");mySerial.write(13);mySerial.print(obstacles_no);delay(3000);mySerial.write(12);break;// s - Number of occupied spaces
     case 'f': mySerial.print("Four Wheelers");mySerial.write(13);mySerial.print(obstacles_no-c_tw);delay(3000);mySerial.write(12);break; // s - Number of occupied spaces
     case 't': mySerial.print("Two Wheelers");mySerial.write(13);mySerial.print(c_tw);delay(3000);mySerial.write(12);break; // s - Number of occupied spaces
     default:Serial.println("Unclear command for display");break;
@@ -203,10 +200,9 @@ void loop() {
 //          delay(5); // Required delay
 //          rob.mySerial.print(toc_size1-tic1);rob.drive('s');delay(5000);
           if(toc_size1-tic1<3000){
-            parkinglot[parkidx]=2;c_tw++;tw_btsc=true;;
+            parkinglot[parkidx]=2;
           }
           else{
-            tw_btsc=false;
             parkinglot[parkidx]=1;
             if(toc_size1-tic_size1<1500){
               c_tw++;}
@@ -223,13 +219,12 @@ void loop() {
 //          rob.mySerial.write(17);
 //          delay(5); // Required delay
 //          rob.mySerial.print(toc2-tic2);rob.drive('s');delay(5000);
-          if(toc2-tic2>3000){parkinglot[parkidx]=2;c_tw++;tw_btsc=true;}
+          if(toc2-tic2>2500){parkinglot[parkidx]=2;}
           else{
-            tw_btsc=false;
             tic_size2=millis();
             while(rob.isobstacle()){if(!rob.linefollowing()){break;}}
             toc_size2=millis(); 
-            if(toc_size2-tic_size2<1500)c_tw++;
+            if(toc_size2-tic_size2<1500){c_tw++;}
             parkinglot[parkidx]=1;
           }
         }
