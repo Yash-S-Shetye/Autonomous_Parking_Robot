@@ -192,34 +192,41 @@ void loop() {
         if(isobj==true){
           obstacles_no++;
           toc1=millis();
-          //rob.mySerial.write(12); // Clear
-          //rob.mySerial.write(17);
-          //delay(5); // Required delay
-          //rob.mySerial.print(toc1-tic1);
-          if(toc1-tic1<300){parkinglot[parkidx]=2;c_tw++;}
-          
+          tic_size1=millis();
+          while(rob.isobstacle()){if(!rob.linefollowing())break;}
+          toc_size1=millis();
+//          rob.mySerial.write(12); // Clear
+//          rob.mySerial.write(17);
+//          delay(5); // Required delay
+//          rob.mySerial.print(toc_size1-tic1);rob.drive('s');delay(5000);
+          if(toc_size1-tic1<3000){
+            parkinglot[parkidx]=2;c_tw++;
+          }
           else{
-            tic_size1=millis();
-            while(rob.isobstacle()){if(!rob.linefollowing())break;}
-            toc_size1=millis();
             parkinglot[parkidx]=1;
-            if(toc_size1-tic_size1<1500) {c_tw++;}
+            if(toc_size1-tic_size1<1500){
+              c_tw++;}
           }
         }
+        
       }
       if(!isintersection && c_itsc==2 && parkinglot[parkidx]==0){
         bool isobj=rob.isobstacle();
         if(isobj==true){
           obstacles_no++;
           toc2=millis();
-          if(toc2-tic2>2000){parkinglot[parkidx]=2;}
+//          rob.mySerial.write(12); // Clear
+//          rob.mySerial.write(17);
+//          delay(5); // Required delay
+//          rob.mySerial.print(toc2-tic2);rob.drive('s');delay(5000);
+          if(toc2-tic2>2500){parkinglot[parkidx]=2;c_tw++;}
           else{
             tic_size2=millis();
             while(rob.isobstacle()){if(!rob.linefollowing()){break;}}
             toc_size2=millis(); 
-            if(toc_size2-tic_size2>100 && parkinglot[parkidx]==0) {
-              parkinglot[parkidx]=1;}
-        }
+            if(toc_size2-tic_size2<1500)c_tw++;
+            parkinglot[parkidx]=1;
+          }
         }
       }
     }
@@ -254,7 +261,7 @@ void loop() {
           rob.lcd_display('s');
           rob.lcd_display('f');
           rob.lcd_display('t');
-          finish=true;localfinish=true;
+          finish=true;localfinish=true; 
         }
         else{
           rob.drive('f');delay(1000);
