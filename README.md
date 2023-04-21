@@ -1,2 +1,2 @@
-# Advanced_Mechatronics_Arduino_Project
-Repository for the Arduino code
+# Autonomous Parking Robot
+Code files for Autonomous Parking Robot using Arduino UNO Board.
